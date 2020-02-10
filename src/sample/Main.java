@@ -5,6 +5,8 @@ import java.util.Scanner;
 
 import static sample.MultiThreadedSum.multiThreadedSum;
 
+import java.util.concurrent.TimeUnit;
+
 public class Main {
 
     public static void main(String[] args) throws InterruptedException {
@@ -26,7 +28,6 @@ public class Main {
         Random random = new Random();
 
         int [] data;
-        Thread [] threads;
 
         System.out.println("Пользователь, введи количество элементов массива: ");
         arrSize = scanner.nextInt();
@@ -34,7 +35,6 @@ public class Main {
         numThreads = scanner.nextInt();
 
         data = new int[arrSize];
-        threads = new Thread[numThreads];
 
         System.out.println("До: ");
         for (int i = 0; i < arrSize; i++) {
@@ -45,7 +45,9 @@ public class Main {
         startProgram = System.nanoTime();
 
         //ВЫЗОВ ВЫНЕСЕННОЙ ФУНКЦИИ МНОГОПОТОЧНОГО ВОЗВЕДЕНИЯ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ
-        multithreadedCalculation(arrSize, numThreads, data, threads);
+        multithreadedCalculation(arrSize, numThreads, data);
+
+        endProgram = System.nanoTime();
 
         System.out.println();
         System.out.println("После: ");
@@ -54,12 +56,18 @@ public class Main {
             System.out.println(i + ". " + data[i]);
         }
 
-        endProgram = System.nanoTime();
-        System.out.println("Время выполнения программы: " + (endProgram - startProgram));
+        System.out.println("Время выполнения программы: " + (endProgram - startProgram) + " наносекунд");
+
+        double elapsedTimeInSecond = (double) (endProgram - startProgram) / 1_000_000_000;
+        System.out.println("Время выполнения программы: " + elapsedTimeInSecond + " секунд");
+
     }
 
     //ВЫНЕСЕНИЕ МНОГОПОТОЧНОГО ВОЗВЕДЕНИЯ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ В ОТДЕЛЬНУЮ ФУНКЦИЮ
-    public static void multithreadedCalculation(int arrSize, int numThreads, int [] data, Thread [] threads) throws InterruptedException {
+    public static void multithreadedCalculation(int arrSize, int numThreads, int [] data) throws InterruptedException {
+
+        Thread [] threads;
+        threads = new Thread[numThreads];
 
         int numElements = arrSize / numThreads;
 
@@ -97,8 +105,6 @@ public class Main {
         System.out.println("Пользователь, введи количество элементов массива: ");
         arrSize = scanner.nextInt();
 
-        startProgram = System.nanoTime();
-
         data = new int[arrSize];
 
         System.out.println("До: ");
@@ -107,13 +113,20 @@ public class Main {
             System.out.println(i+1 + ". " + data[i]);
         }
 
-        System.out.println("Полсе: ");
+        startProgram = System.nanoTime();
+
         for (int i = 0; i < arrSize; i++) {
             data[i] = data[i] * data[i];
             System.out.println(i+1 + ". " + data[i]);
         }
 
         endProgram = System.nanoTime();
+
+        System.out.println("После: ");
+        for (int i = 0; i < arrSize; i++) {
+            System.out.println(i+1 + ". " + data[i]);
+        }
+
         System.out.println("Время выполнения программы: " + (endProgram - startProgram));
     }
 
