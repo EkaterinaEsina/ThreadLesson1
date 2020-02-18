@@ -9,6 +9,34 @@ public class Main {
 
     public static void main(String[] args) throws InterruptedException {
 
+        int firstMatrixHeight, firstMatrixWidth, firstMatrixNumberOfElements, secondMatrixHeight, secondMatrixWidth, secondMatrixNumberOfElements, numThreads, resultMatrixNumberOfElements;
+        int [] data, data2;
+        Random random = new Random();
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Пользователь, введи высоту первой матрицы: ");
+        firstMatrixHeight = scanner.nextInt();
+        System.out.println("Пользователь, введи ширину первой матрицы, она же высота второй: ");
+        firstMatrixWidth = secondMatrixHeight = scanner.nextInt();
+        System.out.println("Пользователь, введи ширину второй матрицы: ");
+        secondMatrixWidth = scanner.nextInt();
+        System.out.println("Пользователь, введи количество потоков: ");
+        numThreads = scanner.nextInt();
+
+        data = new int[firstMatrixHeight];
+        data2 = new int[firstMatrixWidth];
+
+        firstMatrixNumberOfElements = firstMatrixHeight* firstMatrixWidth;
+        System.out.println("Твоя первая матрица: ");
+        for (int i = 0; i < firstMatrixNumberOfElements; i++) {
+            data[i] = random.nextInt(100) + 1;
+            System.out.println(i + ". " + data[i]);
+        }
+
+        resultMatrixNumberOfElements = firstMatrixHeight * secondMatrixWidth;
+
+        
+
         //МУЛЬТИПОТОЧНОЕ СУММИРОВАНИЕ ЭЛЕМЕНТОВ МАССИВА
         //MultiThreadedSum multiThreadedSum = new MultiThreadedSum();
         //multiThreadedSum();
@@ -18,43 +46,43 @@ public class Main {
 
 
         //МНОГОПОТОЧНОЕ ВОЗВЕДЕНИЕ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ
-        long startProgram, endProgram;
+        //long startProgram, endProgram;
 
-        int arrSize, numThreads;
-        Scanner scanner = new Scanner(System.in);
+        //int arrSize, numThreads;
+        //Scanner scanner = new Scanner(System.in);
 
-        Random random = new Random();
+        //Random random = new Random();
 
-        int [] data;
+        //int [] data;
 
-        System.out.println("Пользователь, введи количество элементов массива: ");
-        arrSize = scanner.nextInt();
-        System.out.println("Пользователь, введи количество потоков: ");
-        numThreads = scanner.nextInt();
+        //System.out.println("Пользователь, введи количество элементов массива: ");
+        //arrSize = scanner.nextInt();
+        //System.out.println("Пользователь, введи количество потоков: ");
+        //numThreads = scanner.nextInt();
 
-        data = new int[arrSize];
+        //data = new int[arrSize];
 
-        System.out.println("До: ");
-        for (int i = 0; i < arrSize; i++) {
-            data[i] = random.nextInt(100) + 1;
-            System.out.println(i + ". " + data[i]);
-        }
+        //System.out.println("До: ");
+        //for (int i = 0; i < arrSize; i++) {
+        //data[i] = random.nextInt(100) + 1;
+        //System.out.println(i + ". " + data[i]);
+        //}
 
-        startProgram = System.nanoTime();
+        //startProgram = System.nanoTime();
 
-        //ВЫЗОВ ВЫНЕСЕННОЙ ФУНКЦИИ МНОГОПОТОЧНОГО ВОЗВЕДЕНИЯ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ
-        multithreadedCalculation(arrSize, numThreads, data);
+                //ВЫЗОВ ВЫНЕСЕННОЙ ФУНКЦИИ МНОГОПОТОЧНОГО ВОЗВЕДЕНИЯ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ
+        //multithreadedCalculation(arrSize, numThreads, data);
 
-        endProgram = System.nanoTime();
+        //endProgram = System.nanoTime();
 
-        System.out.println();
-        System.out.println("После: ");
+        //System.out.println();
+        //System.out.println("После: ");
 
-        for (int i = 0; i < arrSize; i++) {
-            System.out.println(i + ". " + data[i]);
-        }
+        //for (int i = 0; i < arrSize; i++) {
+        //System.out.println(i + ". " + data[i]);
+        //}
 
-        System.out.println("Время выполнения программы: " + (endProgram - startProgram));
+        //System.out.println("Время выполнения программы: " + (endProgram - startProgram));
     }
 
     //ВЫНЕСЕНИЕ МНОГОПОТОЧНОГО ВОЗВЕДЕНИЯ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ В ОТДЕЛЬНУЮ ФУНКЦИЮ
