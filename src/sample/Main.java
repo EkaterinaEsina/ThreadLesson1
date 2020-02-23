@@ -9,33 +9,90 @@ public class Main {
 
     public static void main(String[] args) throws InterruptedException {
 
-        int firstMatrixHeight, firstMatrixWidth, firstMatrixNumberOfElements, secondMatrixHeight, secondMatrixWidth, secondMatrixNumberOfElements, numThreads, resultMatrixNumberOfElements;
-        int [] data, data2;
+        //ОДНОПОТОЧНОЕ УМНОЖЕНИЕ МАТРИЦ
+        //singleThreadedMatrixMultiplication();
+
+        //МНОГОПОТОЧНОЕ УМНОЖЕНИЕ МАТРИЦ
+        int
+                firstMatrixHeight, firstMatrixWidth,
+                secondMatrixHeight, secondMatrixWidth,
+                numThreads,
+                resultMatrixHeight, resultMatrixWidth, resultMatrixNumberOfElements,
+                numberOfElementsToThread;
+        long startProgram, endProgram;
+
+        int [][] firstMatrix, secondMatrix, resultMatrix;
+        Thread [] threads;
         Random random = new Random();
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("Пользователь, введи высоту первой матрицы: ");
-        firstMatrixHeight = scanner.nextInt();
+        firstMatrixHeight = resultMatrixHeight = scanner.nextInt();
         System.out.println("Пользователь, введи ширину первой матрицы, она же высота второй: ");
         firstMatrixWidth = secondMatrixHeight = scanner.nextInt();
         System.out.println("Пользователь, введи ширину второй матрицы: ");
-        secondMatrixWidth = scanner.nextInt();
+        secondMatrixWidth = resultMatrixWidth = scanner.nextInt();
         System.out.println("Пользователь, введи количество потоков: ");
         numThreads = scanner.nextInt();
 
-        data = new int[firstMatrixHeight];
-        data2 = new int[firstMatrixWidth];
+        firstMatrix = new int[firstMatrixHeight][firstMatrixWidth];
+        secondMatrix = new int[firstMatrixWidth][secondMatrixWidth];
+        threads = new Thread[numThreads];
 
-        firstMatrixNumberOfElements = firstMatrixHeight* firstMatrixWidth;
         System.out.println("Твоя первая матрица: ");
-        for (int i = 0; i < firstMatrixNumberOfElements; i++) {
-            data[i] = random.nextInt(100) + 1;
-            System.out.println(i + ". " + data[i]);
+        for (int i = 0; i < firstMatrixHeight; i++) {
+            for (int j = 0; j < firstMatrixWidth; j++) {
+                firstMatrix[i][j] = random.nextInt(10) + 1;
+                System.out.print(" " + firstMatrix[i][j] + " ");
+            }
+            System.out.println();
         }
 
-        resultMatrixNumberOfElements = firstMatrixHeight * secondMatrixWidth;
+        System.out.println("Твоя вторая матрица: ");
+        for (int i = 0; i < secondMatrixHeight; i++) {
+            for (int j = 0; j < secondMatrixWidth; j++) {
+                secondMatrix[i][j] = random.nextInt(10) + 1;
+                System.out.print(" " + secondMatrix[i][j] + " ");
+            }
+            System.out.println();
+        }
 
-        
+        startProgram = System.nanoTime();
+
+        resultMatrix = new int [resultMatrixHeight][resultMatrixWidth]; //объявление конечной матрицы
+
+        resultMatrixNumberOfElements = resultMatrixHeight * resultMatrixWidth; //количество элементов конечной матрицы
+
+        numberOfElementsToThread = resultMatrixNumberOfElements / numThreads; //сколько элементов передаем в каждый поток
+
+        for (int i = 0; i < numThreads; i++) {
+            int start = i * numberOfElementsToThread;
+            int end = start + numberOfElementsToThread;
+
+            threads[i] = new Thread(new MatrixMultiplicationThreads(firstMatrix, secondMatrix, resultMatrix, start, end));
+            threads[i].start();
+        }
+
+        int numberOfElementsToMainThread = resultMatrixNumberOfElements % numThreads; //остатки элементов конечной матрицы, кот. считает главный поток
+        int start = resultMatrixNumberOfElements - numberOfElementsToMainThread;
+        MatrixMultiplicationThreads multiThread = new MatrixMultiplicationThreads(firstMatrix, secondMatrix, resultMatrix, start, resultMatrixNumberOfElements);
+        multiThread.run();
+
+        for (int i = 0; i < numThreads; i++) {
+            threads[i].join();
+        }
+
+        endProgram = System.nanoTime();
+
+        System.out.println("Конечная матрица: ");
+        for (int i = 0; i < resultMatrixHeight; i++) {
+            for (int j = 0; j < resultMatrixWidth; j++) {
+                System.out.print(" " + resultMatrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+
+        System.out.println("Время выполнения программы: " + (endProgram - startProgram));
 
         //МУЛЬТИПОТОЧНОЕ СУММИРОВАНИЕ ЭЛЕМЕНТОВ МАССИВА
         //MultiThreadedSum multiThreadedSum = new MultiThreadedSum();
@@ -70,7 +127,7 @@ public class Main {
 
         //startProgram = System.nanoTime();
 
-                //ВЫЗОВ ВЫНЕСЕННОЙ ФУНКЦИИ МНОГОПОТОЧНОГО ВОЗВЕДЕНИЯ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ
+        //ВЫЗОВ ВЫНЕСЕННОЙ ФУНКЦИИ МНОГОПОТОЧНОГО ВОЗВЕДЕНИЯ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ
         //multithreadedCalculation(arrSize, numThreads, data);
 
         //endProgram = System.nanoTime();
@@ -83,6 +140,74 @@ public class Main {
         //}
 
         //System.out.println("Время выполнения программы: " + (endProgram - startProgram));
+    }
+
+    //ОДНОПОТОЧНОЕ УМНОЖЕНИЕ МАТРИЦ
+    public static void singleThreadedMatrixMultiplication() {
+        int
+                firstMatrixHeight, firstMatrixWidth,
+                secondMatrixHeight, secondMatrixWidth,
+                resultMatrixHeight, resultMatrixWidth, resultMatrixNumberOfElements;
+        long startProgram, endProgram;
+
+        int [][] firstMatrix, secondMatrix, resultMatrix;
+        Random random = new Random();
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Пользователь, введи высоту первой матрицы: ");
+        firstMatrixHeight = resultMatrixHeight = scanner.nextInt();
+        System.out.println("Пользователь, введи ширину первой матрицы, она же высота второй: ");
+        firstMatrixWidth = secondMatrixHeight = scanner.nextInt();
+        System.out.println("Пользователь, введи ширину второй матрицы: ");
+        secondMatrixWidth = resultMatrixWidth = scanner.nextInt();
+
+        firstMatrix = new int[firstMatrixHeight][firstMatrixWidth];
+        secondMatrix = new int[firstMatrixWidth][secondMatrixWidth];
+
+        System.out.println("Твоя первая матрица: ");
+        for (int i = 0; i < firstMatrixHeight; i++) {
+            for (int j = 0; j < firstMatrixWidth; j++) {
+                firstMatrix[i][j] = random.nextInt(10) + 1;
+                System.out.print(" " + firstMatrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+
+        System.out.println("Твоя вторая матрица: ");
+        for (int i = 0; i < secondMatrixHeight; i++) {
+            for (int j = 0; j < secondMatrixWidth; j++) {
+                secondMatrix[i][j] = random.nextInt(10) + 1;
+                System.out.print(" " + secondMatrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+
+        startProgram = System.nanoTime();
+
+        resultMatrix = new int [resultMatrixHeight][resultMatrixWidth]; //объявление конечной матрицы
+        resultMatrixNumberOfElements = resultMatrixHeight * resultMatrixWidth; //количество элементов конечной матрицы
+
+        for (int index = 0; index < resultMatrixNumberOfElements; index++) {
+            int sum = 0;
+            int i = index / secondMatrix[0].length;
+            int j = index % secondMatrix[0].length;
+            for (int k = 0; k < secondMatrix.length; k++) {
+                sum += firstMatrix[i][k] * secondMatrix[k][j];
+            }
+            resultMatrix[i][j] = sum;
+        }
+
+        endProgram = System.nanoTime();
+
+        System.out.println("Конечная матрица: ");
+        for (int i = 0; i < resultMatrixHeight; i++) {
+            for (int j = 0; j < resultMatrixWidth; j++) {
+                System.out.print(" " + resultMatrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+
+        System.out.println("Время выполнения программы: " + (endProgram - startProgram));
     }
 
     //ВЫНЕСЕНИЕ МНОГОПОТОЧНОГО ВОЗВЕДЕНИЯ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ В ОТДЕЛЬНУЮ ФУНКЦИЮ
