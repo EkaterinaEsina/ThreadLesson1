@@ -16,15 +16,7 @@ public class MatrixMultiplicationThreads implements Runnable {
     @Override
     public void run() {
 
-        for (int index = start; index < end; index++) {
-            int sum = 0;
-            int i = index / secondMatrix[0].length;
-            int j = index % secondMatrix[0].length;
-            for (int k = 0; k < secondMatrix.length; k++) {
-                sum += firstMatrix[i][k] * secondMatrix[k][j];
-            }
-            resultMatrix[i][j] = sum;
-        }
+        Main.calculationOfTheResultingMatrix(start, end, firstMatrix, secondMatrix, resultMatrix);
 
     }
 }

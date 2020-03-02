@@ -23,7 +23,6 @@ public class Main {
 
         int [][] firstMatrix, secondMatrix, resultMatrix;
         Thread [] threads;
-        Random random = new Random();
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("Пользователь, введи высоту первой матрицы: ");
@@ -40,30 +39,17 @@ public class Main {
         threads = new Thread[numThreads];
 
         System.out.println("Твоя первая матрица: ");
-        for (int i = 0; i < firstMatrixHeight; i++) {
-            for (int j = 0; j < firstMatrixWidth; j++) {
-                firstMatrix[i][j] = random.nextInt(10) + 1;
-                System.out.print(" " + firstMatrix[i][j] + " ");
-            }
-            System.out.println();
-        }
+        randomMatrixFilling(firstMatrixHeight, firstMatrixWidth, firstMatrix);
 
         System.out.println("Твоя вторая матрица: ");
-        for (int i = 0; i < secondMatrixHeight; i++) {
-            for (int j = 0; j < secondMatrixWidth; j++) {
-                secondMatrix[i][j] = random.nextInt(10) + 1;
-                System.out.print(" " + secondMatrix[i][j] + " ");
-            }
-            System.out.println();
-        }
+        randomMatrixFilling(secondMatrixHeight, secondMatrixWidth, secondMatrix);
+
+        resultMatrix = new int [resultMatrixHeight][resultMatrixWidth]; //объявление конечной матрицы
+        resultMatrixNumberOfElements = resultMatrixHeight * resultMatrixWidth; //количество элементов конечной матрицы
+        numberOfElementsToThread = resultMatrixNumberOfElements / numThreads; //сколько элементов передаем в каждый поток
 
         startProgram = System.nanoTime();
 
-        resultMatrix = new int [resultMatrixHeight][resultMatrixWidth]; //объявление конечной матрицы
-
-        resultMatrixNumberOfElements = resultMatrixHeight * resultMatrixWidth; //количество элементов конечной матрицы
-
-        numberOfElementsToThread = resultMatrixNumberOfElements / numThreads; //сколько элементов передаем в каждый поток
 
         for (int i = 0; i < numThreads; i++) {
             int start = i * numberOfElementsToThread;
@@ -101,7 +87,6 @@ public class Main {
         //ОДНОПОТОЧНОЕ ВОЗВЕДЕНИЕ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ
         //singleThreadedCalculation();
 
-
         //МНОГОПОТОЧНОЕ ВОЗВЕДЕНИЕ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ
         //long startProgram, endProgram;
 
@@ -127,8 +112,7 @@ public class Main {
 
         //startProgram = System.nanoTime();
 
-        //ВЫЗОВ ВЫНЕСЕННОЙ ФУНКЦИИ МНОГОПОТОЧНОГО ВОЗВЕДЕНИЯ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ
-        //multithreadedCalculation(arrSize, numThreads, data);
+        //multithreadedCalculation(arrSize, numThreads, data); //вызов вынесенной функции многопоточного возведения элементов массива в квадрат
 
         //endProgram = System.nanoTime();
 
@@ -140,6 +124,32 @@ public class Main {
         //}
 
         //System.out.println("Время выполнения программы: " + (endProgram - startProgram));
+    }
+
+    //ЗАПОЛНЕНИЕ МАТРИЦЫ РАНДОМНЫМИ ЧИСЛАМИ
+    public static void randomMatrixFilling(int matrixHeight, int matrixWidth, int [][] matrix) {
+        Random random = new Random();
+
+        for (int i = 0; i < matrixHeight; i++) {
+            for (int j = 0; j < matrixWidth; j++) {
+                matrix[i][j] = random.nextInt(10) + 1;
+                System.out.print(" " + matrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    //ВЫЧИСЛЕНИЕ ПРОИЗВЕДЕНИЯ МАТРИЦ
+    public static void calculationOfTheResultingMatrix(int ind, int resultMatrixNumberOfElements, int [][] firstMatrix, int [][] secondMatrix, int [][] resultMatrix) {
+        for (int index = ind; index < resultMatrixNumberOfElements; index++) {
+            int sum = 0;
+            int i = index / secondMatrix[0].length;
+            int j = index % secondMatrix[0].length;
+            for (int k = 0; k < secondMatrix.length; k++) {
+                sum += firstMatrix[i][k] * secondMatrix[k][j];
+            }
+            resultMatrix[i][j] = sum;
+        }
     }
 
     //ОДНОПОТОЧНОЕ УМНОЖЕНИЕ МАТРИЦ
@@ -165,37 +175,17 @@ public class Main {
         secondMatrix = new int[firstMatrixWidth][secondMatrixWidth];
 
         System.out.println("Твоя первая матрица: ");
-        for (int i = 0; i < firstMatrixHeight; i++) {
-            for (int j = 0; j < firstMatrixWidth; j++) {
-                firstMatrix[i][j] = random.nextInt(10) + 1;
-                System.out.print(" " + firstMatrix[i][j] + " ");
-            }
-            System.out.println();
-        }
+        randomMatrixFilling(firstMatrixHeight, firstMatrixWidth, firstMatrix);
 
         System.out.println("Твоя вторая матрица: ");
-        for (int i = 0; i < secondMatrixHeight; i++) {
-            for (int j = 0; j < secondMatrixWidth; j++) {
-                secondMatrix[i][j] = random.nextInt(10) + 1;
-                System.out.print(" " + secondMatrix[i][j] + " ");
-            }
-            System.out.println();
-        }
-
-        startProgram = System.nanoTime();
+        randomMatrixFilling(secondMatrixHeight, secondMatrixWidth, secondMatrix);
 
         resultMatrix = new int [resultMatrixHeight][resultMatrixWidth]; //объявление конечной матрицы
         resultMatrixNumberOfElements = resultMatrixHeight * resultMatrixWidth; //количество элементов конечной матрицы
 
-        for (int index = 0; index < resultMatrixNumberOfElements; index++) {
-            int sum = 0;
-            int i = index / secondMatrix[0].length;
-            int j = index % secondMatrix[0].length;
-            for (int k = 0; k < secondMatrix.length; k++) {
-                sum += firstMatrix[i][k] * secondMatrix[k][j];
-            }
-            resultMatrix[i][j] = sum;
-        }
+        startProgram = System.nanoTime();
+
+        calculationOfTheResultingMatrix(0, resultMatrixNumberOfElements, firstMatrix, secondMatrix, resultMatrix);
 
         endProgram = System.nanoTime();
 
