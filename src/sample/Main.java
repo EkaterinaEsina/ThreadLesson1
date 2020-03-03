@@ -1,11 +1,13 @@
 package sample;
 
-import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+
+import static sample.MultiThreadedSumWithMutex.multiThreadedSumWithMutex;
+import static sample.MultiThreadedSum.multiThreadedSum;
 
 //КЛАСС ПРОДУКТА
 class Product {
@@ -84,148 +86,141 @@ class Consumer implements Runnable {
     }
 }
 
+//ГОНКА ПОТОКОВ
+class RacerThread implements Runnable {
+    private Lock mutex;
+    private Lock startLock;
+    private Condition startCondition;
+
+    public RacerThread(Lock mutex, Lock startLock, Condition startCondition) {
+        this.mutex = mutex;
+        this.startLock = startLock;
+        this.startCondition = startCondition;
+    }
+
+    @Override
+    public void run() {
+        startLock.lock();
+        try {
+            System.out.println(Thread.currentThread().getId() + " ожидает");
+            startCondition.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            startLock.unlock();
+        }
+
+        while (true) {
+            mutex.lock();
+            try {
+                Main.counter--;
+                if (Main.counter < 0) break;
+                if (Main.counter == 0) {
+                    System.out.println(Thread.currentThread().getId() + " Ура, я победил!");
+                }
+            } finally {
+                mutex.unlock();
+            }
+
+            try {
+                Thread.sleep(Main.random.nextInt(100));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+}
+
 public class Main {
+    static int counter;
+
     static Scanner scanner = new Scanner(System.in);
     static Random random = new Random();
 
     private static final int numConsumers = 10;
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws Exception {
 
-    Queue<Product> products = new LinkedList<>();
-    Lock productsLock = new ReentrantLock();
+        //МУЛЬТИПОТОЧНОЕ СУММИРОВАНИЕ ЭЛЕМЕНТОВ МАССИВА
+//        MultiThreadedSum multiThreadedSum = new MultiThreadedSum();
+//        multiThreadedSum();
 
-    Thread producerThread = new Thread(new Producer(products, productsLock));
-    producerThread.start();
 
-    Thread [] consumerThreads = new Thread[numConsumers];
-    for (int i = 0; i < numConsumers; i++) {
-        consumerThreads[i] = new Thread(new Consumer(products, productsLock));
-        consumerThreads[i].start();
-    }
+        //МУЛЬТИПОТОЧНОЕ СУММИРОВАНИЕ ЭЛЕМЕНТОВ МАССИВА С ИСПОЛЬЗОВПАНИЕМ МЬЮТЕКСА
 
-    for (int i = 0; i < numConsumers; i++) {
-        consumerThreads[i].join();
-    }
+        MultiThreadedSumWithMutex multiThreadedSumWithMutex = new MultiThreadedSumWithMutex();
+        multiThreadedSumWithMutex();
 
-    producerThread.join();
 
-        //ОДНОПОТОЧНОЕ УМНОЖЕНИЕ МАТРИЦ
-//        singleThreadedMatrixMultiplication();
 
-        //МНОГОПОТОЧНОЕ УМНОЖЕНИЕ МАТРИЦ
-//        int
-//                firstMatrixHeight, firstMatrixWidth,
-//                secondMatrixHeight, secondMatrixWidth,
-//                numThreads,
-//                resultMatrixHeight, resultMatrixWidth, resultMatrixNumberOfElements,
-//                numberOfElementsToThread;
-//        long startProgram, endProgram;
+
+
+
+        //ГОНКА ПОТОКОВ
+
+//        int numThreads;
 //
-//        int [][] firstMatrix, secondMatrix, resultMatrix;
-//        Thread [] threads;
-//
-//        System.out.println("Пользователь, введи высоту первой матрицы: ");
-//        firstMatrixHeight = resultMatrixHeight = scanner.nextInt();
-//        System.out.println("Пользователь, введи ширину первой матрицы, она же высота второй: ");
-//        firstMatrixWidth = secondMatrixHeight = scanner.nextInt();
-//        System.out.println("Пользователь, введи ширину второй матрицы: ");
-//        secondMatrixWidth = resultMatrixWidth = scanner.nextInt();
+//        System.out.println("Пользователь, введи значение счетчика: ");
+//        counter = scanner.nextInt();
 //        System.out.println("Пользователь, введи количество потоков: ");
 //        numThreads = scanner.nextInt();
 //
-//        firstMatrix = new int[firstMatrixHeight][firstMatrixWidth];
-//        secondMatrix = new int[firstMatrixWidth][secondMatrixWidth];
-//        threads = new Thread[numThreads];
+//        Lock mutex = new ReentrantLock();
 //
-//        System.out.println("Твоя первая матрица: ");
-//        randomMatrixFilling(firstMatrixHeight, firstMatrixWidth, firstMatrix);
+//        Lock startLock = new ReentrantLock();
+//        Condition startCondition = startLock.newCondition();
 //
-//        System.out.println("Твоя вторая матрица: ");
-//        randomMatrixFilling(secondMatrixHeight, secondMatrixWidth, secondMatrix);
-//
-//        resultMatrix = new int [resultMatrixHeight][resultMatrixWidth]; //объявление конечной матрицы
-//        resultMatrixNumberOfElements = resultMatrixHeight * resultMatrixWidth; //количество элементов конечной матрицы
-//        numberOfElementsToThread = resultMatrixNumberOfElements / numThreads; //сколько элементов передаем в каждый поток
-//
-//        startProgram = System.nanoTime();
-//
-//
+//        Thread [] threads = new Thread[numThreads];
 //        for (int i = 0; i < numThreads; i++) {
-//            int start = i * numberOfElementsToThread;
-//            int end = start + numberOfElementsToThread;
-//
-//            threads[i] = new Thread(new MatrixMultiplicationThreads(firstMatrix, secondMatrix, resultMatrix, start, end));
+//            threads[i] = new Thread(new RacerThread(mutex, startLock, startCondition));
+//            System.out.println(threads[i].getId() + " участвует в соревновании");
 //            threads[i].start();
 //        }
 //
-//        int numberOfElementsToMainThread = resultMatrixNumberOfElements % numThreads; //остатки элементов конечной матрицы, кот. считает главный поток
-//        int start = resultMatrixNumberOfElements - numberOfElementsToMainThread;
-//        MatrixMultiplicationThreads multiThread = new MatrixMultiplicationThreads(firstMatrix, secondMatrix, resultMatrix, start, resultMatrixNumberOfElements);
-//        multiThread.run();
+//        System.out.println("На старт!");
+//        Thread.sleep(1000);
+//        System.out.println("Внимание!");
+//        Thread.sleep(1000);
+//
+//        startLock.lock();
+//        System.out.println("Марш!!!");
+//        Thread.sleep(1000);
+//        startCondition.signalAll();
+//        startLock.unlock();
 //
 //        for (int i = 0; i < numThreads; i++) {
 //            threads[i].join();
 //        }
 //
-//        endProgram = System.nanoTime();
+//        System.out.println("Завершено!");
+
+
+
+        //ПРОИЗВОДИТЕЛЬ ПОТРЕБИТЕЛЬ
+
+//    Queue<Product> products = new LinkedList<>();
+//    Lock productsLock = new ReentrantLock();
 //
-//        System.out.println("Конечная матрица: ");
-//        for (int i = 0; i < resultMatrixHeight; i++) {
-//            for (int j = 0; j < resultMatrixWidth; j++) {
-//                System.out.print(" " + resultMatrix[i][j] + " ");
-//            }
-//            System.out.println();
-//        }
+//    Thread producerThread = new Thread(new Producer(products, productsLock));
+//    producerThread.start();
 //
-//        System.out.println("Время выполнения программы: " + (endProgram - startProgram));
+//    Thread [] consumerThreads = new Thread[numConsumers];
+//    for (int i = 0; i < numConsumers; i++) {
+//        consumerThreads[i] = new Thread(new Consumer(products, productsLock));
+//        consumerThreads[i].start();
+//    }
+//
+//    for (int i = 0; i < numConsumers; i++) {
+//        consumerThreads[i].join();
+//    }
+//
+//    producerThread.join();
 
-        //МУЛЬТИПОТОЧНОЕ СУММИРОВАНИЕ ЭЛЕМЕНТОВ МАССИВА
-        //MultiThreadedSum multiThreadedSum = new MultiThreadedSum();
-        //multiThreadedSum();
-
-        //ОДНОПОТОЧНОЕ ВОЗВЕДЕНИЕ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ
-        //singleThreadedCalculation();
-
-        //МНОГОПОТОЧНОЕ ВОЗВЕДЕНИЕ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ
-        //long startProgram, endProgram;
-
-        //int arrSize, numThreads;
-        //Scanner scanner = new Scanner(System.in);
-
-        //Random random = new Random();
-
-        //int [] data;
-
-        //System.out.println("Пользователь, введи количество элементов массива: ");
-        //arrSize = scanner.nextInt();
-        //System.out.println("Пользователь, введи количество потоков: ");
-        //numThreads = scanner.nextInt();
-
-        //data = new int[arrSize];
-
-        //System.out.println("До: ");
-        //for (int i = 0; i < arrSize; i++) {
-        //data[i] = random.nextInt(100) + 1;
-        //System.out.println(i + ". " + data[i]);
-        //}
-
-        //startProgram = System.nanoTime();
-
-        //multithreadedCalculation(arrSize, numThreads, data); //вызов вынесенной функции многопоточного возведения элементов массива в квадрат
-
-        //endProgram = System.nanoTime();
-
-        //System.out.println();
-        //System.out.println("После: ");
-
-        //for (int i = 0; i < arrSize; i++) {
-        //System.out.println(i + ". " + data[i]);
-        //}
-
-        //System.out.println("Время выполнения программы: " + (endProgram - startProgram));
     }
 
+
+    //===========================================================================МАТРИЦЫ==================================================================================
 
     //ЗАПОЛНЕНИЕ МАТРИЦЫ РАНДОМНЫМИ ЧИСЛАМИ
     public static void randomMatrixFilling(int matrixHeight, int matrixWidth, int [][] matrix) {
@@ -299,8 +294,119 @@ public class Main {
         System.out.println("Время выполнения программы: " + (endProgram - startProgram));
     }
 
+    //МНОГОПОТОЧНОЕ УМНОЖЕНИЕ МАТРИЦ
+    public static void multiThreadedMatrixMultiplication() throws InterruptedException {
+        int
+                firstMatrixHeight, firstMatrixWidth,
+                secondMatrixHeight, secondMatrixWidth,
+                numThreads,
+                resultMatrixHeight, resultMatrixWidth, resultMatrixNumberOfElements,
+                numberOfElementsToThread;
+        long startProgram, endProgram;
+
+        int [][] firstMatrix, secondMatrix, resultMatrix;
+        Thread [] threads;
+
+        System.out.println("Пользователь, введи высоту первой матрицы: ");
+        firstMatrixHeight = resultMatrixHeight = scanner.nextInt();
+        System.out.println("Пользователь, введи ширину первой матрицы, она же высота второй: ");
+        firstMatrixWidth = secondMatrixHeight = scanner.nextInt();
+        System.out.println("Пользователь, введи ширину второй матрицы: ");
+        secondMatrixWidth = resultMatrixWidth = scanner.nextInt();
+        System.out.println("Пользователь, введи количество потоков: ");
+        numThreads = scanner.nextInt();
+
+        firstMatrix = new int[firstMatrixHeight][firstMatrixWidth];
+        secondMatrix = new int[firstMatrixWidth][secondMatrixWidth];
+        threads = new Thread[numThreads];
+
+        System.out.println("Твоя первая матрица: ");
+        randomMatrixFilling(firstMatrixHeight, firstMatrixWidth, firstMatrix);
+
+        System.out.println("Твоя вторая матрица: ");
+        randomMatrixFilling(secondMatrixHeight, secondMatrixWidth, secondMatrix);
+
+        resultMatrix = new int [resultMatrixHeight][resultMatrixWidth]; //объявление конечной матрицы
+        resultMatrixNumberOfElements = resultMatrixHeight * resultMatrixWidth; //количество элементов конечной матрицы
+        numberOfElementsToThread = resultMatrixNumberOfElements / numThreads; //сколько элементов передаем в каждый поток
+
+        startProgram = System.nanoTime();
+
+
+        for (int i = 0; i < numThreads; i++) {
+            int start = i * numberOfElementsToThread;
+            int end = start + numberOfElementsToThread;
+
+            threads[i] = new Thread(new MatrixMultiplicationThreads(firstMatrix, secondMatrix, resultMatrix, start, end));
+            threads[i].start();
+        }
+
+        int numberOfElementsToMainThread = resultMatrixNumberOfElements % numThreads; //остатки элементов конечной матрицы, кот. считает главный поток
+        int start = resultMatrixNumberOfElements - numberOfElementsToMainThread;
+        MatrixMultiplicationThreads multiThread = new MatrixMultiplicationThreads(firstMatrix, secondMatrix, resultMatrix, start, resultMatrixNumberOfElements);
+        multiThread.run();
+
+        for (int i = 0; i < numThreads; i++) {
+            threads[i].join();
+        }
+
+        endProgram = System.nanoTime();
+
+        System.out.println("Конечная матрица: ");
+        for (int i = 0; i < resultMatrixHeight; i++) {
+            for (int j = 0; j < resultMatrixWidth; j++) {
+                System.out.print(" " + resultMatrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+
+        System.out.println("Время выполнения программы: " + (endProgram - startProgram));
+    }
+
+    //========================================================ВОЗВЕЗЕДНИЕ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ======================================================================
+
+    //МНОГОПОТОЧНОЕ ВОЗВЕДЕНИЕ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ
+    public static void multiThreadedCalculation() throws InterruptedException {
+        long startProgram, endProgram;
+
+        int arrSize, numThreads;
+        Scanner scanner = new Scanner(System.in);
+
+        Random random = new Random();
+
+        int [] data;
+
+        System.out.println("Пользователь, введи количество элементов массива: ");
+        arrSize = scanner.nextInt();
+        System.out.println("Пользователь, введи количество потоков: ");
+        numThreads = scanner.nextInt();
+
+        data = new int[arrSize];
+
+        System.out.println("До: ");
+        for (int i = 0; i < arrSize; i++) {
+            data[i] = random.nextInt(100) + 1;
+            System.out.println(i + ". " + data[i]);
+        }
+
+        startProgram = System.nanoTime();
+
+        multithreadedCalculationFunction(arrSize, numThreads, data); //вызов вынесенной функции многопоточного возведения элементов массива в квадрат
+
+        endProgram = System.nanoTime();
+
+        System.out.println();
+        System.out.println("После: ");
+
+        for (int i = 0; i < arrSize; i++) {
+            System.out.println(i + ". " + data[i]);
+        }
+
+        System.out.println("Время выполнения программы: " + (endProgram - startProgram));
+    }
+
     //ВЫНЕСЕНИЕ МНОГОПОТОЧНОГО ВОЗВЕДЕНИЯ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ В ОТДЕЛЬНУЮ ФУНКЦИЮ
-    public static void multithreadedCalculation(int arrSize, int numThreads, int [] data) throws InterruptedException {
+    public static void multithreadedCalculationFunction(int arrSize, int numThreads, int [] data) throws InterruptedException {
 
         Thread [] threads;
         threads = new Thread[numThreads];
@@ -327,7 +433,7 @@ public class Main {
         }
     }
 
-    //РЕАЛИЗАЦИЯ ОДНОПОТОЧНОГО ВОЗВЕДЕНИЯ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ
+    //ОДНОПОТОЧНОЕ ВОЗВЕДЕНИЕ ЭЛЕМЕНТОВ МАССИВА В КВАДРАТ
     public static void singleThreadedCalculation() {
         long startProgram, endProgram;
 

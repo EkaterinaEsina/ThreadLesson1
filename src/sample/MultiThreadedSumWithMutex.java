@@ -2,9 +2,14 @@ package sample;
 
 import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class MultiThreadedSum {
-    public static void multiThreadedSum() throws InterruptedException {
+public class MultiThreadedSumWithMutex {
+
+    static int sum = 0;
+
+    public static void multiThreadedSumWithMutex() throws InterruptedException {
         long startProgram, endProgram;
 
         int arrSize, numThreads;
@@ -22,31 +27,32 @@ public class MultiThreadedSum {
 
         data = new int[arrSize];
         threads = new Thread[numThreads];
+        Lock mutex = new ReentrantLock();
 
         System.out.println("Твой массив: ");
         for (int i = 0; i < arrSize; i++) {
             data[i] = random.nextInt(100) + 1;
-            System.out.print(data[i] + ", ");
+            if (i != arrSize - 1) {
+                System.out.print(data[i] + ", ");
+            } else {
+                System.out.print(data[i]);
+                System.out.println("   ");
+            }
         }
 
         startProgram = System.nanoTime();
 
         int numElements = arrSize / numThreads;
-        int [] sumFromThreads;
-        sumFromThreads = new int[numThreads];
 
         for (int i = 0; i < numThreads; i++) {
             int start = i * numElements;
             int end = start + numElements;
 
-            sumFromThreads[i] = 0;
-
-            threads[i] = new Thread(new SumThreads(data, start, end, sumFromThreads, i));
+            threads[i] = new Thread(new SumThreadsWithMutex(data, start, end, mutex));
             threads[i].start();
         }
 
         int rem = arrSize % numThreads;
-        int sumsum = 0;
         int sumMainThread = 0;
 
         for (int i = 0; i < rem; i++) {
@@ -58,17 +64,14 @@ public class MultiThreadedSum {
             threads[i].join();
         }
 
-        for (int i = 0; i < numThreads; i++) {
-            sumsum = sumsum + sumFromThreads[i];
-        }
-
-        sumsum = sumsum + sumMainThread;
+        sum = sum + sumMainThread;
 
         endProgram = System.nanoTime();
 
-        System.out.println();
-        System.out.println("Сумма: " + sumsum);
+        System.out.println("   ");
+        System.out.println("Сумма элементов массива равна: " + sum);
 
+        System.out.println("   ");
         System.out.println("Время выполнения программы: " + (endProgram - startProgram));
     }
 }
