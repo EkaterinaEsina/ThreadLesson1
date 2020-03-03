@@ -17,21 +17,20 @@ public class SumThreadsWithMutex implements Runnable {
 
     @Override
     public void run() {
+        int sum = 0;
+
+        for (int i = start; i < end; i++) {
+            sum = sum + data[i];
+        }
+
         mutex.lock();
 
         try {
-            int sum = 0;
-
-            for (int i = start; i < end; i++) {
-                sum = sum + data[i];
-            }
-
             MultiThreadedSumWithMutex.sum = MultiThreadedSumWithMutex.sum + sum;
 
         } finally {
             mutex.unlock();
         }
-
     }
 }
 
