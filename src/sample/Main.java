@@ -5,6 +5,7 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static sample.MultiThreadedSumWithMutex.multiThreadedSumWithMutex;
 import static sample.MultiThreadedSum.multiThreadedSum;
@@ -142,20 +143,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        //МУЛЬТИПОТОЧНОЕ СУММИРОВАНИЕ ЭЛЕМЕНТОВ МАССИВА
-//        MultiThreadedSum multiThreadedSum = new MultiThreadedSum();
-//        multiThreadedSum();
-
-
-        //МУЛЬТИПОТОЧНОЕ СУММИРОВАНИЕ ЭЛЕМЕНТОВ МАССИВА С ИСПОЛЬЗОВПАНИЕМ МЬЮТЕКСА
-
-        MultiThreadedSumWithMutex multiThreadedSumWithMutex = new MultiThreadedSumWithMutex();
-        multiThreadedSumWithMutex();
-
-
-
-
-
+        singleThreadedSumOfArray();
 
         //ГОНКА ПОТОКОВ
 
@@ -219,6 +207,63 @@ public class Main {
 
     }
 
+    //============================================================СУММИРОВАНИЕ ЭЛЕМЕНТОВ МАССИВА==========================================================================
+
+    //ЗАПОЛНЕНИЕ МАССИВА СЛУЧАЙНЫМИ ЧИСЛАМИ И ВЫВОД МАССИВА В КОНСОЛЬ
+    public static void fillingAndDisplayingArray(int [] data, int arrSize) {
+        for (int i = 0; i < arrSize; i++) {
+            data[i] = random.nextInt(100) + 1;
+            if (i != arrSize - 1) {
+                System.out.print(data[i] + ", ");
+            } else {
+                System.out.print(data[i]);
+                System.out.println("   ");
+            }
+        }
+    }
+
+    //МУЛЬТИПОТОЧНОЕ СУММИРОВАНИЕ ЭЛЕМЕНТОВ МАССИВА
+    public static void multiThreadedSumOfArrayElements() throws InterruptedException {
+        multiThreadedSum();
+    }
+
+    //МУЛЬТИПОТОЧНОЕ СУММИРОВАНИЕ ЭЛЕМЕНТОВ МАССИВА С ИСПОЛЬЗОВПАНИЕМ МЬЮТЕКСА
+    public static void multiThreadedSumOfArrayElementsWithMutex() throws InterruptedException {
+        multiThreadedSumWithMutex();
+    }
+
+    //ОДНОПОТОЧНОЕ СУММИРОВАНИЕ ЭЛЕМЕНТОВ МАССИВА
+    public static void singleThreadedSumOfArray() {
+        long startProgram, endProgram;
+
+        int arrSize;
+        int sum = 0;
+        Scanner scanner = new Scanner(System.in);
+
+        int [] data;
+
+        System.out.println("Пользователь, введи количество элементов массива: ");
+        arrSize = scanner.nextInt();
+
+        data = new int[arrSize];
+
+        System.out.println("Твой массив: ");
+        fillingAndDisplayingArray(data, arrSize);
+
+        startProgram = System.nanoTime();
+
+        for (int i = 0; i < arrSize; i++) {
+            sum = sum + data[i];
+        }
+
+        endProgram = System.nanoTime();
+
+        System.out.println();
+        System.out.println("Сумма: " + sum);
+
+        System.out.println();
+        System.out.println("Время выполнения программы: " + (endProgram - startProgram));
+    }
 
     //===========================================================================МАТРИЦЫ==================================================================================
 

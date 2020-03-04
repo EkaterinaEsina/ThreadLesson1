@@ -1,6 +1,5 @@
 package sample;
 
-import java.util.Random;
 import java.util.Scanner;
 
 public class MultiThreadedSum {
@@ -9,8 +8,6 @@ public class MultiThreadedSum {
 
         int arrSize, numThreads;
         Scanner scanner = new Scanner(System.in);
-
-        Random random = new Random();
 
         int [] data;
         Thread [] threads;
@@ -24,10 +21,7 @@ public class MultiThreadedSum {
         threads = new Thread[numThreads];
 
         System.out.println("Твой массив: ");
-        for (int i = 0; i < arrSize; i++) {
-            data[i] = random.nextInt(100) + 1;
-            System.out.print(data[i] + ", ");
-        }
+        Main.fillingAndDisplayingArray(data, arrSize);
 
         startProgram = System.nanoTime();
 
@@ -69,6 +63,7 @@ public class MultiThreadedSum {
         System.out.println();
         System.out.println("Сумма: " + sumsum);
 
+        System.out.println();
         System.out.println("Время выполнения программы: " + (endProgram - startProgram));
     }
 }

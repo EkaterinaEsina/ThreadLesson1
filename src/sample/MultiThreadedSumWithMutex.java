@@ -1,6 +1,5 @@
 package sample;
 
-import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -15,8 +14,6 @@ public class MultiThreadedSumWithMutex {
         int arrSize, numThreads;
         Scanner scanner = new Scanner(System.in);
 
-        Random random = new Random();
-
         int [] data;
         Thread [] threads;
 
@@ -30,15 +27,7 @@ public class MultiThreadedSumWithMutex {
         Lock mutex = new ReentrantLock();
 
         System.out.println("Твой массив: ");
-        for (int i = 0; i < arrSize; i++) {
-            data[i] = random.nextInt(100) + 1;
-            if (i != arrSize - 1) {
-                System.out.print(data[i] + ", ");
-            } else {
-                System.out.print(data[i]);
-                System.out.println("   ");
-            }
-        }
+        Main.fillingAndDisplayingArray(data, arrSize);
 
         startProgram = System.nanoTime();
 
@@ -68,10 +57,10 @@ public class MultiThreadedSumWithMutex {
 
         endProgram = System.nanoTime();
 
-        System.out.println("   ");
+        System.out.println();
         System.out.println("Сумма элементов массива равна: " + sum);
 
-        System.out.println("   ");
+        System.out.println();
         System.out.println("Время выполнения программы: " + (endProgram - startProgram));
     }
 }
