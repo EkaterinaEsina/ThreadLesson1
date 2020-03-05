@@ -1,5 +1,7 @@
 package sample;
 
+import java.io.*;
+import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Scanner;
@@ -7,8 +9,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static sample.MultiThreadedSumWithMutex.multiThreadedSumWithMutex;
 import static sample.MultiThreadedSum.multiThreadedSum;
+import static sample.MultiThreadedSumWithMutex.multiThreadedSumWithMutex;
 
 //КЛАСС ПРОДУКТА
 class Product {
@@ -27,11 +29,13 @@ class Producer implements Runnable {
 
     private Queue<Product> products;
     private Lock productsLock;
+    private Condition noProductsCondition;
     private int counter;
 
-    public Producer(Queue<Product> products, Lock productsLock) {
+    public Producer(Queue<Product> products, Lock productsLock, Condition noProductsCondition) {
         this.products = products;
         this.productsLock = productsLock;
+        this.noProductsCondition = noProductsCondition;
         this.counter = 0;
     }
 
@@ -43,6 +47,7 @@ class Producer implements Runnable {
                 Product product = new Product(++counter, productTypes[Main.random.nextInt(3)]);
                 System.out.println("Продукт " + product.name + " произведен");
                 products.add(product);
+                noProductsCondition.signal();
             } finally {
                 productsLock.unlock();
             }
@@ -61,10 +66,12 @@ class Producer implements Runnable {
 class Consumer implements Runnable {
     private Queue<Product> products;
     private Lock productsLock;
+    private Condition noProductsCondition;
 
-    public Consumer(Queue<Product> products, Lock productsLock) {
+    public Consumer(Queue<Product> products, Lock productsLock, Condition noProductsCondition) {
         this.products = products;
         this.productsLock = productsLock;
+        this.noProductsCondition = noProductsCondition;
     }
 
     @Override
@@ -73,63 +80,98 @@ class Consumer implements Runnable {
             productsLock.lock();
             try {
                 Product product = products.poll();
-                if (product == null) {
-                    System.out.println(Thread.currentThread().getId() + ": продуктов нет, жду");
-                } else {
-                    System.out.println(Thread.currentThread().getId() + ": приобрел продукт " + product.name);
-                    i++;
+                while (product == null) {
+                    System.out.println("Поток № " + Thread.currentThread().getId() + ": продуктов нет, жду");
+                    try {
+                        noProductsCondition.await();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    product = products.poll();
                 }
+                System.out.println("Поток № " + Thread.currentThread().getId() + ": приобрел продукт " + product.name);
+                i++;
             } finally {
                 productsLock.unlock();
             }
         }
-        System.out.println(Thread.currentThread().getId() + ": приобрел все необходимое");
+        System.out.println("Поток № " + Thread.currentThread().getId() + ": приобрел все необходимое");
     }
 }
 
-//ГОНКА ПОТОКОВ
-class RacerThread implements Runnable {
-    private Lock mutex;
-    private Lock startLock;
-    private Condition startCondition;
+//=================================================================ПРОИЗВОДИТЕЛЬ ПОТРЕБИТЕЛЬ ФИБОНАЧЧИ=========================================================================
 
-    public RacerThread(Lock mutex, Lock startLock, Condition startCondition) {
-        this.mutex = mutex;
-        this.startLock = startLock;
-        this.startCondition = startCondition;
+//КЛАСС ПРОДУКТА ДЛЯ ЗАДАЧИ С ЧИСЛОМ ФИБОНАЧЧИ
+class ProductFibonacci {
+    public int id;
+    public String name;
+
+    public ProductFibonacci(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+}
+
+//КЛАСС ПРОИЗВОДИТЕЛЯ ДЛЯ ЗАДАЧИ С ЧИСЛОМ ФИБОНАЧЧИ
+class ProducerFibonacci implements Runnable {
+
+    private Queue <String> numbers;
+//    private Lock numbersLock;
+//    private Condition noNumbersCondition;
+//    private int counter;
+    private File file;
+
+    public ProducerFibonacci(Queue <String> numbers, File file) {
+    //public ProducerFibonacci(Queue<Product> products, Lock productsLock, Condition noProductsCondition, File file) {
+//        this.products = products;
+//        this.productsLock = productsLock;
+//        this.noProductsCondition = noProductsCondition;
+//        this.counter = 0;
+        this.numbers = numbers;
+        this.file = file;
     }
 
     @Override
     public void run() {
-        startLock.lock();
+        FileReader fileReader = null;
         try {
-            System.out.println(Thread.currentThread().getId() + " ожидает");
-            startCondition.await();
-        } catch (InterruptedException e) {
+            fileReader = new FileReader(file);
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
-        } finally {
-            startLock.unlock();
+        }
+        Scanner scan = new Scanner(fileReader);
+
+        int i = 1;
+        while (scan.hasNextLine()) {
+            numbers.add(scan.nextLine());
+            i++;
         }
 
-        while (true) {
-            mutex.lock();
-            try {
-                Main.counter--;
-                if (Main.counter < 0) break;
-                if (Main.counter == 0) {
-                    System.out.println(Thread.currentThread().getId() + " Ура, я победил!");
-                }
-            } finally {
-                mutex.unlock();
-            }
+        System.out.println(numbers);
 
-            try {
-                Thread.sleep(Main.random.nextInt(100));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
+        try {
+            fileReader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
+}
+
+//КЛАСС ПОТРЕБИТЕЛЯ ДЛЯ ЗАДАЧИ С ЧИСЛОМ ФИБОНАЧЧИ
+class ConsumerFibonacci implements Runnable {
+    private Queue<Product> products;
+    private Lock productsLock;
+    private Condition noProductsCondition;
+
+    public ConsumerFibonacci(Queue<Product> products, Lock productsLock, Condition noProductsCondition) {
+        this.products = products;
+        this.productsLock = productsLock;
+        this.noProductsCondition = noProductsCondition;
+    }
+
+    @Override
+    public void run() {
+
     }
 }
 
@@ -143,68 +185,93 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        singleThreadedSumOfArray();
+        producerConsumerFibonacci();
 
-        //ГОНКА ПОТОКОВ
+    }
 
-//        int numThreads;
-//
-//        System.out.println("Пользователь, введи значение счетчика: ");
-//        counter = scanner.nextInt();
-//        System.out.println("Пользователь, введи количество потоков: ");
-//        numThreads = scanner.nextInt();
-//
-//        Lock mutex = new ReentrantLock();
-//
-//        Lock startLock = new ReentrantLock();
-//        Condition startCondition = startLock.newCondition();
-//
-//        Thread [] threads = new Thread[numThreads];
-//        for (int i = 0; i < numThreads; i++) {
-//            threads[i] = new Thread(new RacerThread(mutex, startLock, startCondition));
-//            System.out.println(threads[i].getId() + " участвует в соревновании");
-//            threads[i].start();
-//        }
-//
-//        System.out.println("На старт!");
-//        Thread.sleep(1000);
-//        System.out.println("Внимание!");
-//        Thread.sleep(1000);
-//
-//        startLock.lock();
-//        System.out.println("Марш!!!");
-//        Thread.sleep(1000);
-//        startCondition.signalAll();
-//        startLock.unlock();
-//
-//        for (int i = 0; i < numThreads; i++) {
-//            threads[i].join();
-//        }
-//
-//        System.out.println("Завершено!");
+    //============================================================ПРОИЗВОДИТЕЛЬ ПОТРЕБИТЕЛЬ ФИБОНАЧЧИ======================================================================
 
+    public static void producerConsumerFibonacci() throws Exception {
+        Queue <String> numbers = new LinkedList<>();
 
+        File dir = new File("C:/Users/eesina/Desktop/FibonacciNumber");
+        File file = new File(dir, "FibonacciNumber.txt");
 
-        //ПРОИЗВОДИТЕЛЬ ПОТРЕБИТЕЛЬ
+        if (file.createNewFile()) {
+            FileWriter fileWriter = new FileWriter(file, false);
 
-//    Queue<Product> products = new LinkedList<>();
-//    Lock productsLock = new ReentrantLock();
-//
-//    Thread producerThread = new Thread(new Producer(products, productsLock));
-//    producerThread.start();
-//
-//    Thread [] consumerThreads = new Thread[numConsumers];
-//    for (int i = 0; i < numConsumers; i++) {
-//        consumerThreads[i] = new Thread(new Consumer(products, productsLock));
-//        consumerThreads[i].start();
-//    }
-//
-//    for (int i = 0; i < numConsumers; i++) {
-//        consumerThreads[i].join();
-//    }
-//
-//    producerThread.join();
+            for(int i = 1; i < 1001; i++) {
+                fileWriter.write(i + "\n");
+            }
 
+            fileWriter.close();
+        }
+
+        Thread producerThread = new Thread(new ProducerFibonacci(numbers, file));
+        producerThread.start();
+    }
+
+    //==============================================================ПРОИЗВОДИТЕЛЬ ПОТРЕБИТЕЛЬ=============================================================================
+
+    public static void producerConsumer() throws InterruptedException {
+        Queue<Product> products = new LinkedList<>();
+        Lock productsLock = new ReentrantLock();
+        Condition noProductsCondition = productsLock.newCondition();
+
+        Thread producerThread = new Thread(new Producer(products, productsLock, noProductsCondition));
+        producerThread.start();
+
+        Thread [] consumerThreads = new Thread[numConsumers];
+        for (int i = 0; i < numConsumers; i++) {
+            consumerThreads[i] = new Thread(new Consumer(products, productsLock, noProductsCondition));
+            consumerThreads[i].start();
+        }
+
+        for (int i = 0; i < numConsumers; i++) {
+            consumerThreads[i].join();
+        }
+
+        producerThread.join();
+    }
+
+    //=====================================================================ГОНКА ПОТОКОВ==================================================================================
+
+    public static void raceOfThreads() throws InterruptedException {
+        int numThreads;
+
+        System.out.println("Пользователь, введи значение счетчика: ");
+        counter = scanner.nextInt();
+        System.out.println("Пользователь, введи количество потоков: ");
+        numThreads = scanner.nextInt();
+
+        Lock mutex = new ReentrantLock();
+
+        Lock startLock = new ReentrantLock();
+        Condition startCondition = startLock.newCondition();
+
+        Thread [] threads = new Thread[numThreads];
+        for (int i = 0; i < numThreads; i++) {
+            threads[i] = new Thread(new RacerThread(mutex, startLock, startCondition));
+            System.out.println(threads[i].getId() + " участвует в соревновании");
+            threads[i].start();
+        }
+
+        System.out.println("На старт!");
+        Thread.sleep(1000);
+        System.out.println("Внимание!");
+        Thread.sleep(1000);
+
+        startLock.lock();
+        System.out.println("Марш!!!");
+        Thread.sleep(1000);
+        startCondition.signalAll();
+        startLock.unlock();
+
+        for (int i = 0; i < numThreads; i++) {
+            threads[i].join();
+        }
+
+        System.out.println("Завершено!");
     }
 
     //============================================================СУММИРОВАНИЕ ЭЛЕМЕНТОВ МАССИВА==========================================================================
