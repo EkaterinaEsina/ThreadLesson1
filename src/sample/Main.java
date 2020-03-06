@@ -200,8 +200,10 @@ public class Main {
         if (file.createNewFile()) {
             FileWriter fileWriter = new FileWriter(file, false);
 
-            for(int i = 1; i < 1001; i++) {
-                fileWriter.write(i + "\n");
+            while (file.length()/1024 < 101) {
+                for(int i = 1; i < 10000; i++) {
+                    fileWriter.write(random.nextInt(1000) + "\n");
+                }
             }
 
             fileWriter.close();
