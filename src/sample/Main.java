@@ -1,10 +1,7 @@
 package sample;
 
 import java.io.*;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -115,18 +112,11 @@ class ProductFibonacci {
 //КЛАСС ПРОИЗВОДИТЕЛЯ ДЛЯ ЗАДАЧИ С ЧИСЛОМ ФИБОНАЧЧИ
 class ProducerFibonacci implements Runnable {
 
-    private Queue <String> numbers;
-//    private Lock numbersLock;
-//    private Condition noNumbersCondition;
-//    private int counter;
+    private Queue <Integer> numbers;
     private File file;
 
-    public ProducerFibonacci(Queue <String> numbers, File file) {
-    //public ProducerFibonacci(Queue<Product> products, Lock productsLock, Condition noProductsCondition, File file) {
-//        this.products = products;
-//        this.productsLock = productsLock;
-//        this.noProductsCondition = noProductsCondition;
-//        this.counter = 0;
+    public ProducerFibonacci(Queue <Integer> numbers, File file) {
+
         this.numbers = numbers;
         this.file = file;
     }
@@ -143,7 +133,7 @@ class ProducerFibonacci implements Runnable {
 
         int i = 1;
         while (scan.hasNextLine()) {
-            numbers.add(scan.nextLine());
+            numbers.add(Integer.parseInt(scan.nextLine()));
             i++;
         }
 
@@ -159,19 +149,24 @@ class ProducerFibonacci implements Runnable {
 
 //КЛАСС ПОТРЕБИТЕЛЯ ДЛЯ ЗАДАЧИ С ЧИСЛОМ ФИБОНАЧЧИ
 class ConsumerFibonacci implements Runnable {
-    private Queue<Product> products;
-    private Lock productsLock;
-    private Condition noProductsCondition;
 
-    public ConsumerFibonacci(Queue<Product> products, Lock productsLock, Condition noProductsCondition) {
-        this.products = products;
-        this.productsLock = productsLock;
-        this.noProductsCondition = noProductsCondition;
+    private Queue <Integer> numbers;
+    private File file;
+
+    public ConsumerFibonacci(Queue <Integer> numbers, File file) {
+        this.numbers = numbers;
+        this.file = file;
     }
 
     @Override
     public void run() {
-
+//        Iterator<Integer> iterator = numbers.iterator();
+//        for (int i = 0; ; ++i) {
+//            if (iterator.hasNext()) {
+//                Integer value = iterator.next();
+//                System.out.println(i + " " + value);
+//            } else break;
+//        }
     }
 }
 
@@ -192,7 +187,13 @@ public class Main {
     //============================================================ПРОИЗВОДИТЕЛЬ ПОТРЕБИТЕЛЬ ФИБОНАЧЧИ======================================================================
 
     public static void producerConsumerFibonacci() throws Exception {
-        Queue <String> numbers = new LinkedList<>();
+
+        int consumers;
+
+        System.out.println("Пользователь, введи количество потребителей: ");
+        consumers = scanner.nextInt();
+
+        Queue <Integer> numbers = new LinkedList<>();
 
         File dir = new File("C:/Users/eesina/Desktop/FibonacciNumber");
         File file = new File(dir, "FibonacciNumber.txt");
@@ -205,12 +206,24 @@ public class Main {
                     fileWriter.write(random.nextInt(1000) + "\n");
                 }
             }
-
             fileWriter.close();
         }
 
         Thread producerThread = new Thread(new ProducerFibonacci(numbers, file));
         producerThread.start();
+
+
+        Thread [] consumerThreads = new Thread[consumers];
+        for (int i = 0; i < consumers; i++) {
+            consumerThreads[i] = new Thread(new ConsumerFibonacci(numbers, file));
+            consumerThreads[i].start();
+        }
+
+        for (int i = 0; i < consumers; i++) {
+            consumerThreads[i].join();
+        }
+
+        producerThread.join();
     }
 
     //==============================================================ПРОИЗВОДИТЕЛЬ ПОТРЕБИТЕЛЬ=============================================================================
