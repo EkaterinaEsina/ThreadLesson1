@@ -113,12 +113,15 @@ class ProductFibonacci {
 class ProducerFibonacci implements Runnable {
 
     private Queue <Integer> numbers;
+    private Lock lock;
     private File file;
+    private Condition condition;
 
-    public ProducerFibonacci(Queue <Integer> numbers, File file) {
-
+    public ProducerFibonacci(Queue <Integer> numbers, Lock lock, File file, Condition condition) {
         this.numbers = numbers;
+        this.lock = lock;
         this.file = file;
+        this.condition = condition;
     }
 
     @Override
@@ -126,22 +129,31 @@ class ProducerFibonacci implements Runnable {
         FileReader fileReader = null;
         try {
             fileReader = new FileReader(file);
+
+            Scanner scan = new Scanner(fileReader);
+
+            try {
+                lock.lock();
+                int i = 1;
+                while (scan.hasNextLine()) {
+                    numbers.add(Integer.parseInt(scan.nextLine()));
+                    i++;
+                    condition.signal();
+                }
+                Main.theEnd = true;
+                System.out.println(numbers);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                lock.unlock();
+            }
+
+            try {
+                fileReader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        Scanner scan = new Scanner(fileReader);
-
-        int i = 1;
-        while (scan.hasNextLine()) {
-            numbers.add(Integer.parseInt(scan.nextLine()));
-            i++;
-        }
-
-        System.out.println(numbers);
-
-        try {
-            fileReader.close();
-        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -151,22 +163,57 @@ class ProducerFibonacci implements Runnable {
 class ConsumerFibonacci implements Runnable {
 
     private Queue <Integer> numbers;
+    private Lock lock;
     private File file;
+    Condition condition;
 
-    public ConsumerFibonacci(Queue <Integer> numbers, File file) {
+    public ConsumerFibonacci(Queue <Integer> numbers, Lock lock, File file, Condition condition) {
         this.numbers = numbers;
+        this.lock = lock;
         this.file = file;
+        this.condition = condition;
+    }
+
+    private static int numFib(int fib){
+        int a = 0;
+        int b = 1;
+        for (int i = 2; i <= fib; i++) {
+            int next = a + b;
+            a = b;
+            b = next;
+        }
+        return b;
     }
 
     @Override
     public void run() {
-//        Iterator<Integer> iterator = numbers.iterator();
-//        for (int i = 0; ; ++i) {
-//            if (iterator.hasNext()) {
-//                Integer value = iterator.next();
-//                System.out.println(i + " " + value);
-//            } else break;
-//        }
+
+        try {
+            lock.lock();
+            Integer number = numbers.poll();
+            while (Main.theEnd) {
+                while (number == null) {
+                    System.out.println(Thread.currentThread().getId() + " : чисел нет");
+                    try {
+                        condition.await();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    number = numbers.poll();
+
+                }
+
+                    Integer fibonacciNumber = numFib(number);
+                    System.out.println("Число Фибоначчи № " + number + " равно " + fibonacciNumber);
+                    number = numbers.poll();
+            }
+
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+
     }
 }
 
@@ -175,11 +222,13 @@ public class Main {
 
     static Scanner scanner = new Scanner(System.in);
     static Random random = new Random();
+    static boolean theEnd;
 
     private static final int numConsumers = 10;
 
     public static void main(String[] args) throws Exception {
 
+        theEnd = false;
         producerConsumerFibonacci();
 
     }
@@ -194,6 +243,8 @@ public class Main {
         consumers = scanner.nextInt();
 
         Queue <Integer> numbers = new LinkedList<>();
+        Lock lock = new ReentrantLock();
+        Condition condition = lock.newCondition();
 
         File dir = new File("C:/Users/eesina/Desktop/FibonacciNumber");
         File file = new File(dir, "FibonacciNumber.txt");
@@ -203,19 +254,19 @@ public class Main {
 
             while (file.length()/1024 < 101) {
                 for(int i = 1; i < 10000; i++) {
-                    fileWriter.write(random.nextInt(1000) + "\n");
+                    fileWriter.write(random.nextInt(100) + "\n");
                 }
             }
             fileWriter.close();
         }
 
-        Thread producerThread = new Thread(new ProducerFibonacci(numbers, file));
+        Thread producerThread = new Thread(new ProducerFibonacci(numbers, lock, file, condition));
         producerThread.start();
 
 
         Thread [] consumerThreads = new Thread[consumers];
         for (int i = 0; i < consumers; i++) {
-            consumerThreads[i] = new Thread(new ConsumerFibonacci(numbers, file));
+            consumerThreads[i] = new Thread(new ConsumerFibonacci(numbers, lock, file, condition));
             consumerThreads[i].start();
         }
 
