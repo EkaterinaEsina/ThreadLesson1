@@ -9,6 +9,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import static sample.MultiThreadedSum.multiThreadedSum;
 import static sample.MultiThreadedSumWithMutex.multiThreadedSumWithMutex;
 
+//=====================================================================ПРОИЗВОДИТЕЛЬ ПОТРЕБИТЕЛЬ===============================================================================
+
 //КЛАСС ПРОДУКТА
 class Product {
     public int id;
@@ -98,17 +100,6 @@ class Consumer implements Runnable {
 
 //=================================================================ПРОИЗВОДИТЕЛЬ ПОТРЕБИТЕЛЬ ФИБОНАЧЧИ=========================================================================
 
-//КЛАСС ПРОДУКТА ДЛЯ ЗАДАЧИ С ЧИСЛОМ ФИБОНАЧЧИ
-class ProductFibonacci {
-    public int id;
-    public String name;
-
-    public ProductFibonacci(int id, String name) {
-        this.id = id;
-        this.name = name;
-    }
-}
-
 //КЛАСС ПРОИЗВОДИТЕЛЯ ДЛЯ ЗАДАЧИ С ЧИСЛОМ ФИБОНАЧЧИ
 class ProducerFibonacci implements Runnable {
 
@@ -141,6 +132,7 @@ class ProducerFibonacci implements Runnable {
                     condition.signal();
                 }
                 Main.theEnd = true;
+                condition.signalAll();
                 System.out.println(numbers);
             } catch (Exception e) {
                 e.printStackTrace();
