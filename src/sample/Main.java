@@ -180,30 +180,32 @@ class ConsumerFibonacci implements Runnable {
     @Override
     public void run() {
 
-        try {
-            lock.lock();
-            Integer number = numbers.poll();
-            while (Main.theEnd) {
+        while (true) {
+            try {
+                lock.lock();
+                Integer number = numbers.poll();
                 while (number == null) {
-                    System.out.println(Thread.currentThread().getId() + " : чисел нет");
-                    try {
-                        condition.await();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                    if (Main.theEnd) {
+                        System.out.println(Thread.currentThread().getId() + " : чисел нет");
+                        return;
+                    } else {
+                        try {
+                            condition.await();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        number = numbers.poll();
                     }
-                    number = numbers.poll();
-
                 }
 
-                    Integer fibonacciNumber = numFib(number);
-                    System.out.println("Число Фибоначчи № " + number + " равно " + fibonacciNumber);
-                    number = numbers.poll();
-            }
+                Integer fibonacciNumber = numFib(number);
+                System.out.println("Число Фибоначчи № " + number + " равно " + fibonacciNumber);
 
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
+            } catch (NullPointerException e) {
+                e.printStackTrace();
+            } finally {
+                lock.unlock();
+            }
         }
 
     }
@@ -246,7 +248,7 @@ public class Main {
 
             while (file.length()/1024 < 101) {
                 for(int i = 1; i < 10000; i++) {
-                    fileWriter.write(random.nextInt(100) + "\n");
+                    fileWriter.write(random.nextInt(1000) + "\n");
                 }
             }
             fileWriter.close();
