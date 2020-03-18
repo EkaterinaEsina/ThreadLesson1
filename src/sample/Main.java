@@ -123,22 +123,29 @@ class ProducerFibonacci implements Runnable {
 
             Scanner scan = new Scanner(fileReader);
 
-            try {
-                lock.lock();
+            int number;
+
                 int i = 1;
-                while (scan.hasNextLine()) {
-                    numbers.add(Integer.parseInt(scan.nextLine()));
-                    i++;
-                    condition.signal();
+                while (scan.hasNextInt()) {
+                    number = scan.nextInt();
+                    System.out.println("Поток № " + Thread.currentThread().getId() + " прочитал " + number);
+                    lock.lock();
+                    try {
+                        numbers.add(number);
+                        i++;
+                        condition.signal();
+                    } finally {
+                        lock.unlock();
+                    }
                 }
-                Main.theEnd = true;
-                condition.signalAll();
-                System.out.println(numbers);
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                lock.unlock();
-            }
+                lock.lock();
+                try {
+                    Main.theEnd = true;
+                    condition.signalAll();
+                    System.out.println(numbers);
+                } finally {
+                    lock.unlock();
+                }
 
             try {
                 fileReader.close();
@@ -200,9 +207,6 @@ class ConsumerFibonacci implements Runnable {
 
                 Integer fibonacciNumber = numFib(number);
                 System.out.println("Число Фибоначчи № " + number + " равно " + fibonacciNumber);
-
-            } catch (NullPointerException e) {
-                e.printStackTrace();
             } finally {
                 lock.unlock();
             }
