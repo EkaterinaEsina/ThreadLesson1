@@ -128,7 +128,7 @@ class ProducerFibonacci implements Runnable {
                 int i = 1;
                 while (scan.hasNextInt()) {
                     number = scan.nextInt();
-                    System.out.println("Поток № " + Thread.currentThread().getId() + " прочитал " + number);
+                    System.out.println("Прочитал число " + number);
                     lock.lock();
                     try {
                         numbers.add(number);
@@ -206,7 +206,7 @@ class ConsumerFibonacci implements Runnable {
                 }
 
                 Integer fibonacciNumber = numFib(number);
-                System.out.println("Число Фибоначчи № " + number + " равно " + fibonacciNumber);
+                System.out.println("Поток №" + Thread.currentThread().getId()+ ":   " + "число Фибоначчи № " + number + " равно " + fibonacciNumber);
             } finally {
                 lock.unlock();
             }
