@@ -214,7 +214,7 @@ public class Main {
 
     static Scanner scanner = new Scanner(System.in);
     static Random random = new Random();
-    static boolean theEnd;
+    static volatile boolean theEnd;
 
     private static final int numConsumers = 10;
 
