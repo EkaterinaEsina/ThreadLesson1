@@ -125,14 +125,12 @@ class ProducerFibonacci implements Runnable {
 
             int number;
 
-                int i = 1;
                 while (scan.hasNextInt()) {
                     number = scan.nextInt();
                     System.out.println("Прочитал число " + number);
                     lock.lock();
                     try {
                         numbers.add(number);
-                        i++;
                         condition.signal();
                     } finally {
                         lock.unlock();
@@ -163,13 +161,11 @@ class ConsumerFibonacci implements Runnable {
 
     private Queue <Integer> numbers;
     private Lock lock;
-    private File file;
     Condition condition;
 
-    public ConsumerFibonacci(Queue <Integer> numbers, Lock lock, File file, Condition condition) {
+    public ConsumerFibonacci(Queue <Integer> numbers, Lock lock, Condition condition) {
         this.numbers = numbers;
         this.lock = lock;
-        this.file = file;
         this.condition = condition;
     }
 
@@ -264,7 +260,7 @@ public class Main {
 
         Thread [] consumerThreads = new Thread[consumers];
         for (int i = 0; i < consumers; i++) {
-            consumerThreads[i] = new Thread(new ConsumerFibonacci(numbers, lock, file, condition));
+            consumerThreads[i] = new Thread(new ConsumerFibonacci(numbers, lock, condition));
             consumerThreads[i].start();
         }
 
